@@ -16,7 +16,7 @@ import { escape, update } from '@microsoft/sp-lodash-subset';
 
 // Class Services
 export default class spservices {
-
+  private ServerRelativeUrl = [];
   private graphClient: MSGraphClient = null;
   private spHttpClient: SPHttpClient;
   constructor(private context: WebPartContext) {
@@ -37,13 +37,10 @@ export default class spservices {
   }
 
   public async getSiteLists(siteUrl: string) {
-
     let results: any[] = [];
-
     if (!siteUrl) {
       return [];
     }
-
     try {
       const web = new Web(siteUrl);
       results = await web.lists
@@ -57,30 +54,8 @@ export default class spservices {
     }
     return results;
   }
+  
 
-
-  public async getAllImages(siteUrl: string, listId: string, numberImages: number): Promise<any[]> {
-    let results: any[] = [];
-    try {
-      const web = new Web(siteUrl);
-      console.log('list ID', web.lists.getById(listId));
-      results = await web.lists.getById(listId).items
-        //.select('Title', 'Description', 'File/Name', 'File/ServerRelativeUrl', 'File/Title', 'File/Id', 'File/TimeLastModified')
-        .expand("Folders, Files").select('Files')
-        .filter(`status eq show`)
-        .top(numberImages)
-        .orderBy('Id')
-        .usingCaching()
-        .get();
-      console.log('results getAllImages', await results);      
-    } catch (error) {
-      console.log(error);
-      return Promise.reject(error);
-    }
-    // sort by name
-
-    return results;
-  }
   private getPageListItems(siteUrl: string, listId: string, index: number, numberImages: number): Promise<any[]> {
     return new Promise<any[]>((resolve, reject): void => {
       let requestUrl = siteUrl
@@ -180,7 +155,7 @@ export default class spservices {
             response.json().then((responseJSON) => {
               if (responseJSON != null && responseJSON.value != null) {
                 let items: any[] = responseJSON.value;
-                console.log('items getImagesQuery', items);
+                console.log(items);
                 resolve(items);
               }
             });

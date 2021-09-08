@@ -1,8 +1,4 @@
-export interface ICarouselImages {
-  imageUrl: string;
-  serverRelativeUrl: string;
-  caption: string;
-  mediaType: string;
-  description: string;
+export interface ICarouselImages {  
+  serverRelativeUrl: string;      
   linkUrl: string;
 }
