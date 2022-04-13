@@ -64,22 +64,33 @@
   }
 }
 
-:global {
-  .slick-next,
-  .slick-prev {
-    background: #000000 !important;
-    opacity: 0.3;
-  }
-  .slick-dots {
-    position: initial !important;
-  }
-}
+// :global {
+//   .slick-next,
+//   .slick-prev {
+//     background: #000000 !important;
+//     opacity: 0.3;
+//   }
+//   .slick-dots {
+//     position: initial !important;
+//   }
+// }
 
-[class*="slick-dots"] li button {
-  &:before {
-    font-size: 15px !important;
-  }
-}
+// [class*="slick-dots"] li button {
+//   &:before {
+//     font-size: 15px !important;
+//   }
+// }
+
 [class*="pointer"] {
   cursor: pointer;
 }
+
+// [class*="ms-Image-image"] {
+//   width: auto !important;
+// }
+// [class*="react-multi-carousel-item"] {  
+//   width: 464px !important;
+// }
+// [class*="react-multi-carousel-list"] {  
+//   justify-content: center;
+// }

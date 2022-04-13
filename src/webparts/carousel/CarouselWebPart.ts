@@ -13,7 +13,7 @@ import {
 } from '@microsoft/sp-property-pane';
 
 import * as strings from 'CarouselWebPartStrings';
-import Carousel from './components/Carousel';
+import Carousels from './components/Carousel';
 import { ICarouselProps } from './components/ICarouselProps';
 import spservices from '../../spservices/spservices';
 import { PropertyFieldNumber } from '@pnp/spfx-property-controls/lib/PropertyFieldNumber';
@@ -21,6 +21,7 @@ import { PropertyFieldNumber } from '@pnp/spfx-property-controls/lib/PropertyFie
 export interface ICarouselWebPartProps {
   title: string;
   siteUrl: string;
+  showStatus: string;
   list: string;
   errorMessage: string;
   numberImages: number;
@@ -139,7 +140,7 @@ export default class CarouselWebPart extends BaseClientSideWebPart<ICarouselWebP
   public render(): void {
 
     const element: React.ReactElement<ICarouselProps> = React.createElement(
-      Carousel,
+      Carousels,
       {
         title: this.properties.title,
         siteUrl: this.properties.siteUrl,
@@ -147,6 +148,7 @@ export default class CarouselWebPart extends BaseClientSideWebPart<ICarouselWebP
         numberImages: this.properties.numberImages,
         context: this.context,
         displayMode: this.displayMode,
+        showStatus:this.properties.showStatus,
         updateProperty: (value: string) => {
           this.properties.title = value;
         },
@@ -198,6 +200,10 @@ export default class CarouselWebPart extends BaseClientSideWebPart<ICarouselWebP
                   maxValue: 250,
                   minValue: 1,
                   disabled: false
+                }),
+                PropertyPaneTextField('showStatus', {
+                  label: strings.showStatusLabel,
+                  value: this.properties.showStatus,
                 }),
                 PropertyPaneLabel('errorMessage', {
                   text:  this.errorMessage,

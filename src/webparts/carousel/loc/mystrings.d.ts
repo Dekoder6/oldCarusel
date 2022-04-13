@@ -7,6 +7,7 @@ declare interface ICarouselWebPartStrings {
   WebpartConfigDescription: string;
   WebpartConfigIconText: string;
   TitleLabel:string;
+  showStatusLabel:string;
 }
 
 declare module 'CarouselWebPartStrings' {

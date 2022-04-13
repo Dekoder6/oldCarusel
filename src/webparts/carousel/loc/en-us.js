@@ -7,6 +7,7 @@ define([], function() {
     "WebPartConfigButtonLabel": "Configure",
     "WebpartConfigDescription": "Please configure Image Library ",
     "WebpartConfigIconText": "Configure your Carousel Web Part",
-    "TitleLabel": 'Web Part Title'
+    "TitleLabel": 'Web Part Title',
+    "showStatusLabel": 'A word to show'  
   }
 });

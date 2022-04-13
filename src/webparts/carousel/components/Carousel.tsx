@@ -11,6 +11,11 @@ import { Player, BigPlayButton } from 'video-react';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+
+import Carousel from 'react-multi-carousel';
+import 'react-multi-carousel/lib/styles.css';
+
+
 import * as $ from 'jquery';
 import { FontSizes, } from '@uifabric/fluent-theme/lib/fluent/FluentType';
 import { sp, Fields, Web, SearchResults, Field, PermissionKind, RegionalSettings, PagedItemCollection } from '@pnp/sp';
@@ -33,11 +38,25 @@ import {
 
 
 
-export default class Carousel extends React.Component<ICarouselProps, ICarouselState> {
+export default class Carousels extends React.Component<ICarouselProps, ICarouselState> {
 	private spService: spservices = null;
 	private _teamsContext: microsoftTeams.Context = null;
 	private Files: any = [];
 	private arrayImages: any = [];
+	private responsive = {
+		desktop: {
+			breakpoint: { max: 2000, min: 1080 },
+			items: 1
+		},
+		tablet: {
+			breakpoint: { max: 1080, min: 464 },
+			items: 1
+		},
+		mobile: {
+			breakpoint: { max: 464, min: 0 },
+			items: 1
+		}
+	};
 	public constructor(props: ICarouselProps) {
 		super(props);
 		this.state = {
@@ -59,9 +78,7 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 
 	public async componentDidMount() {
 		let getServerUrl = await this.getServerRelativeUrl();
-		let getFile = await this.getFiles(getServerUrl);
-		let checkedStatusImage = await this.checkedStatusImage(getFile);
-		this.showImages(checkedStatusImage);
+		this.getFiles(getServerUrl);
 	}
 
 	private getServerRelativeUrl(): Promise<any> {
@@ -76,90 +93,30 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 		});
 	}
 
-	public getFiles(folderUrl): Promise<any> {
-		return new Promise((resolve, reject) => {
-			const web = new Web(this.props.siteUrl);
-			web.getFolderByServerRelativeUrl(folderUrl)
-				.expand("Folders, Files").select('Files,ListItemAllFields')
-				.get().then((getFolder: any) => {
-					getFolder.Folders.forEach(item => {
-						return resolve(this.getFiles(item.ServerRelativeUrl));
-					});
-					getFolder.Files.forEach((file) => {
-						if (file.Name.split('.')[1] == 'PDF' || file.Name.split('.')[1] == 'pdf' || file.Name.split('.')[1] == 'PNG' || file.Name.split('.')[1] == 'png' || file.Name.split('.')[1] == 'JPG' || file.Name.split('.')[1] == 'jpg' || file.Name.split('.')[1] == 'JPEG' || file.Name.split('.')[1] == 'jpeg' || file.Name.split('.')[1] == 'PPTX' || file.Name.split('.')[1] == 'pptx') {
-							this.Files.push(file);
-						}
-					});
-					return resolve(this.Files);
-				}).catch((ex) => {
-					reject(ex);
-				});
-		});
-	}
 
-	public checkedStatusImage(files): Promise<any> {
+	public getFiles(folderUrl): void {
 		const web = new Web(this.props.siteUrl);
-		return new Promise((resolve, reject) => {
-			Promise.all(files.map((file) => {
-				return web.getFolderByServerRelativeUrl(file.ServerRelativeUrl).listItemAllFields.get().then((itemFiltred: any) => {
-					if (itemFiltred.status == 'show') {
-						this.arrayImages.push(file);
-					}
-					return this.arrayImages;
+
+
+
+		web.getFolderByServerRelativeUrl(folderUrl)
+			.expand("Folders, Files,Files/ListItemAllFields/FieldValuesAsText").select('Files,Files/ListItemAllFields/FieldValuesAsText')
+			.get().then((getFolder: any) => {
+				getFolder.Folders.forEach(item => {
+					this.getFiles(item.ServerRelativeUrl);
 				});
-			})).then(() => {
-				resolve(this.arrayImages);
+				getFolder.Files.forEach((file) => {				
+					if (file.ListItemAllFields && file.ListItemAllFields.FieldValuesAsText && file.ListItemAllFields.FieldValuesAsText.status.toLowerCase() == this.props.showStatus.toLowerCase()) {
+						this.Files.push(file);
+					}
+				});
+				this.setState({
+					carouselImages: this.Files,
+					isLoading: false
+				});
+			}).catch((ex) => {
+				console.error(ex);
 			});
-		});
-
-	}
-
-	// public async componentDidUpdate(prevProps: ICarouselProps) {
-
-	// 	if (!this.props.list || !this.props.siteUrl) return;
-	// 	// Get  Properties change
-	// 	if (prevProps.list !== this.props.list || prevProps.numberImages !== this.props.numberImages) {
-	// 		/*
-	// 		 this.galleryImages = [];
-	// 		 this._carouselImages = [];
-	// 		 this.setState({ images: this.galleryImages, carouselImages: t.his._carouselImages, isLoading: false });
-	// 		 */
-	// 		await this.loadPictures();
-	// 	}
-	// }
-
-	public showImages(arrayWithImages): void {
-		let galleryImages: ICarouselImages[] = [];
-		let carouselImages: React.ReactElement<HTMLElement>[] = [];
-		arrayWithImages.map((image) => {
-			galleryImages.push(
-				{
-					serverRelativeUrl: image.ServerRelativeUrl.split(image.Name)[0],
-					linkUrl: image.ServerRelativeUrl
-				},
-			);
-
-		});
-
-		carouselImages = galleryImages.map((galleryImage, i) => {
-			return (
-				<div className='slideLoading' >
-					<div className='pointer' data-is-focusable={true} onClick={() => { this.clickImage(galleryImage.serverRelativeUrl); }}>
-						<Image src={galleryImage.linkUrl}
-							onLoadingStateChange={async (loadState: ImageLoadState) => {
-								if (loadState == ImageLoadState.loaded) {
-									this.setState({ loadingImage: false });
-								}
-							}}
-							height={'400px'}
-							imageFit={ImageFit.cover}
-						/>
-					</div>
-				</div>
-			);
-		}
-		);
-		this.setState({ carouselImages: carouselImages, isLoading: false });
 	}
 
 	private clickImage(path) {
@@ -167,6 +124,7 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 	}
 
 	public render(): React.ReactElement<ICarouselProps> {
+		const { carouselImages, isLoading, hasError, errorMessage, loadingImage } = this.state;
 		const sliderSettings = {
 			dots: true,
 			dotsClass: 'slick-dots',
@@ -186,8 +144,6 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 
 		return (
 			<div className={styles.carousel} >
-				<div>
-				</div>
 				{
 					(!this.props.list) ?
 						<Placeholder iconName='Edit'
@@ -197,15 +153,15 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 							hideButton={this.props.displayMode === DisplayMode.Read}
 							onConfigure={this.onConfigure.bind(this)} />
 						:
-						this.state.hasError ?
+						hasError ?
 							<MessageBar messageBarType={MessageBarType.error}>
-								{this.state.errorMessage}
+								{errorMessage}
 							</MessageBar>
 							:
-							this.state.isLoading ?
+							isLoading ?
 								<Spinner size={SpinnerSize.large} label='loading images...' />
 								:
-								this.state.carouselImages.length == 0 ?
+								carouselImages.length == 0 ?
 									<div style={{ width: '300px', margin: 'auto' }}>
 										<Icon iconName="PhotoCollection"
 											style={{ fontSize: '250px', color: '#d9d9d9' }} />
@@ -213,24 +169,48 @@ export default class Carousel extends React.Component<ICarouselProps, ICarouselS
 									</div>
 									:
 									<div style={{ width: '100%', height: '100%' }}>
-
-										<div style={{ width: '100%' }}>
-											<Slider
+										<Carousel
+											//ssr
+											responsive={this.responsive}
+											infinite={true}
+											showDots={true}
+											keyBoardControl={true}
+											transitionDuration={500}
+											autoPlay={true}
+											autoPlaySpeed={5000}
+											customTransition='all 1s'
+										>
+											{/* <Slider
 												{...sliderSettings}
 												autoplay={true}
 												onReInit={() => {
-													if (!this.state.loadingImage)
+													if (!loadingImage)
 														$(".slideLoading").removeClass("slideLoading");
-												}}>
-												{
-													this.state.carouselImages
-												}
-											</Slider>
-										</div>
-										{
-											this.state.loadingImage &&
+												}}> */}
+
+											{carouselImages && carouselImages.length > 0 && carouselImages.map((galleryImage, i) => {										
+												return (
+													<div className='pointer' data-is-focusable={true} onClick={() => { this.clickImage(galleryImage.ListItemAllFields.FieldValuesAsText.FileRef.split(galleryImage.ListItemAllFields.FieldValuesAsText.FileLeafRef)[0]); }}>
+														<Image src={galleryImage.ListItemAllFields.FieldValuesAsText.FileRef}
+															onLoadingStateChange={async (loadState: ImageLoadState) => {
+																if (loadState == ImageLoadState.loaded) {
+																	this.setState({ loadingImage: false });
+																}
+															}}
+															width={'100%'}
+															height={'400px'}
+															imageFit={ImageFit.centerContain}
+														/>
+													</div>
+
+												);
+											})}
+											{/* </Slider> */}
+										</Carousel>
+										{/* {
+											loadingImage &&
 											<Spinner size={SpinnerSize.small} label={'Loading...'} style={{ verticalAlign: 'middle', right: '30%', top: 20, position: 'absolute', fontSize: FontSizes.size18, color: CommunicationColors.primary }}></Spinner>
-										}
+										} */}
 									</div>
 				}
 			</div >
