@@ -105,10 +105,11 @@ export default class Carousels extends React.Component<ICarouselProps, ICarousel
 				getFolder.Folders.forEach(item => {
 					this.getFiles(item.ServerRelativeUrl);
 				});
-				getFolder.Files.forEach((file) => {				
-					if (file.ListItemAllFields && file.ListItemAllFields.FieldValuesAsText && file.ListItemAllFields.FieldValuesAsText.status.toLowerCase() == this.props.showStatus.toLowerCase()) {
+				getFolder.Files.forEach((file) => {		
+					console.log('file.ListItemAllFields.FieldValuesAsText',file.ListItemAllFields.FieldValuesAsText);		
+					if (file.ListItemAllFields && file.ListItemAllFields.FieldValuesAsText && file.ListItemAllFields.FieldValuesAsText.Status == this.props.showStatus) {
 						this.Files.push(file);
-					}
+					}					
 				});
 				this.setState({
 					carouselImages: this.Files,
